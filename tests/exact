@@ -1,0 +1,23 @@
+#s1 4
+#s2 4; 8
+s3 2; 2; 2
+s3 4; 4; 4
+s3 8; 8; 8
+s3 16; 16; 16
+s3 32; 32; 32
+
+r k1r{1} k2r{1} k3r{1} kr{3} fr{9} ur{1}
+r p@ k1r{1} k2r{1} k3r{1} kr{3} fr{9} ur{1}
+
+r k1r{5} k2r{3} k3r{1} s{3} kr{sqrt(35)} fr{35*7} fi{35*5} ur{cos(5*X(1) + 3*X(2) + 1*X(3)) + 7} ui{sin(5*X(1) + 3*X(2) + 1*X(3)) + 5}
+r p@ k1r{5} k2r{3} k3r{1} s{3} kr{sqrt(35)} fr{35*7} fi{35*5} ur{cos(5*X(1) + 3*X(2) + 1*X(3)) + 7} ui{sin(5*X(1) + 3*X(2) + 1*X(3)) + 5}
+
+r k1r{5} k2r{3} k3r{1} kr{1} fr{7} fi{11} ur{cos(X(3))+7} ui{sin(X(3))+11}
+r p@ k1r{5} k2r{3} k3r{1} kr{1} fr{7} fi{11} ur{cos(X(3))+7} ui{sin(X(3))+11}
+
+#r k1r{1} k2r{3} k3r{2} s{23} kr{3} fr{0} ur{cos(3*X(2))} ui{sin(3*X(2))}
+#r k1r{1} k2r{3} k3r{2} s{23} kr{sqrt(10)} fr{0} ur{cos(1*X(1) + 3*X(2))} ui{sin(1*X(1) + 3*X(2))}
+#r k1r{1} k2r{3} k3r{2} s{3} kr{sqrt(14)} fr{0} ur{cos(1*X(1) + 3*X(2) + 2*X(3))} ui{sin(1*X(1) + 3*X(2) + 2*X(3))}
+#r k1r{1} k2r{3} k3r{2} s{3} kr{sqrt(14)} fr{14*7} fi{14*5} ur{cos(1*X(1) + 3*X(2) + 2*X(3)) + 7} ui{sin(1*X(1) + 3*X(2) + 2*X(3)) + 5}
+#r k1r{5} k2r{3} k3r{1} s{3} kr{sqrt(35)} fr{35*7} fi{35*5} ur{cos(5*X(1) + 3*X(2) + 1*X(3)) + 7} ui{sin(5*X(1) + 3*X(2) + 1*X(3)) + 5}
+#r p@ k1r{5} k2r{3} k3r{1} s{3} kr{sqrt(35)} fr{35*7} fi{35*5} ur{cos(5*X(1) + 3*X(2) + 1*X(3)) + 7} ui{sin(5*X(1) + 3*X(2) + 1*X(3)) + 5}

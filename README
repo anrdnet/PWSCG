@@ -1,0 +1,7 @@
+This project contains an implementation of the PWSCG finie element method.
+
+Dependencies:
+GetFEM++ (home.gna.org/getfem/)
+scons (for building) (www.scons.org)
+
+Any questons regarding this project can be directed to a@anrd.net

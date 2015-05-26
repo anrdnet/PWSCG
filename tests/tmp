@@ -1,0 +1,197 @@
+#!/usr/bin/env python
+
+import sys
+import subprocess as sp
+
+def usage_exit():
+    print("Usage: run {-v} {-g} {-r <test_number>} <test_file>", file=sys.stderr)
+    exit(1)
+
+filename = None
+run_nums = []
+verbose = False
+debug = False
+dry_run = False
+
+state = 0
+for i in range(1, len(sys.argv)):
+    arg = sys.argv[i]
+    if state == 0 and arg == "-r":
+        state = 1
+    elif state == 1:
+        run_nums.append(int(sys.argv[i]))
+        state = 0
+    elif state == 0 and arg == "-v":
+        verbose = True
+    elif state == 0 and arg == "-d":
+        dry_run = True
+    elif state == 0 and arg == "-g":
+        debug = True
+    elif state == 0 and arg[0] == "-":
+        usage_exit();
+    elif state == 0:
+        filename = arg
+    else:
+        usage_exit()
+
+if state != 0:
+    usage_exit()
+sizes = {}
+runs = []
+macros = {}
+
+if filename is None:
+    usage_exit()
+
+def parse_keyval(line):
+    args = {}
+    line = line.replace(' ','')
+    cur = 0
+    while cur < len(line):
+        start = line.find('{', cur)
+        end = line.find('}', start)
+        at = line.find('@', cur)
+
+        if at != -1 and (start == -1 or at < start):
+            start = end = at
+
+        if start == -1 or end == -1:
+            print("Invalid key-val spec, ignoring", file=sys.stderr)
+            return None
+
+        if line[cur:start] in args:
+            print("Duplicate argument in key-val spec", file=sys.stderr)
+
+        if start == end:
+            args[line[cur:start]] = None
+        else:
+            args[line[cur:start]] = line[start+1:end]
+        cur = end + 1
+    return args
+
+def expand(value):
+    for key in macros:
+        value = value.replace(key, macros[key])
+    return value
+
+with open(filename) as f:
+    for line in f:
+        line = line.rstrip()
+        if len(line) == 0 or line[0] == '#':
+            pass
+        elif line[0] == 's':
+            if len(line) < 2 or line[1].isspace():
+                print("Ivalid size spec, ignoring", file=sys.stderr)
+                continue
+
+            group = line[1]
+            parts = line[2:].split(';')
+            if not (1 <= len(parts) <= 3):
+                print("Invalid size spec, ignoring", file=sys.stderr)
+            else:
+                if not group in sizes:
+                    sizes[group] = []
+                sizes[group].append(parts)
+        elif line[0] == 'r':
+            run = type('run', (object,), {})()
+            run.args = {}
+
+            args = parse_keyval(line[1:])
+            if args is None:
+                print("Invalid run spec, ignoring", file=sys.stderr)
+                continue
+
+            if "s" in args:
+                run.sizes = args["s"]
+                del args["s"]
+
+            if not args is None:
+                run.args = args
+                runs.append(run)
+        elif line[0] == 'm':
+            mac = parse_keyval(line[1:])
+            if mac is None:
+                print("Invalid macro spec, ignoring", file=sys.stderr)
+            else:
+                macros.update(mac)
+        else:
+            print("Unknown spec: "+line[0], file=sys.stderr)
+
+if len(run_nums) == 0:
+    run_nums = range(len(runs))
+
+allsizes = ""
+for group in sizes:
+    allsizes += group
+
+for i in run_nums:
+    if i >= len(runs):
+        print("Invalid test numer "+str(i)+", ignoring", file=sys.stderr)
+        continue
+    run = runs[i]
+    args = [ "build/pwcg" ]
+
+    if not hasattr(run, 'sizes'):
+        run.sizes = allsizes
+    for group in run.sizes:
+        if not group in sizes:
+            print("Unknown size group "+group+", ignoring", file=sys.stderr)
+            continue
+        for size in sizes[group]:
+            args.append("-s")
+            args.extend(size)
+
+    for arg in run.args:
+        args.append("-"+arg)
+        if not run.args[arg] is None:
+            if dry_run:
+                args.append("\""+expand(run.args[arg])+"\"")
+            else:
+                args.append(expand(run.args[arg]))
+
+    args = list(map(str.strip, args))
+    if dry_run:
+        print(" ".join(args))
+        exit(0)
+    elif debug:
+        args.insert(0, "gdb")
+        args.insert(1, "--args")
+        sp.call(args)
+        exit(0)
+    else:
+        run.proc = sp.Popen(args, bufsize=4096, stdout=sp.PIPE, stderr=sp.PIPE)
+
+def desc_expr(args, prefix):
+    vr = prefix + "r"
+    vi = prefix + "i"
+    desc = ""
+    if vr in args or vi in args:
+        desc += prefix + " = "
+        if vr in args:
+            desc += args[vr]
+        if vr in args and vi in args:
+            desc += " + "
+        if vi in args:
+            desc += "i ("+args[vi]+")"
+    return desc
+
+def desc(args):
+    poly = "p " if "p" in args else ""
+    return poly + desc_expr(args, "k") + " " + desc_expr(args, "u")
+
+for i in run_nums:
+    if i >= len(runs):
+        continue
+    run = runs[i]
+    retcode = run.proc.wait()
+    out, err = run.proc.communicate()
+    print(desc(run.args))
+    if retcode != 0:
+        print("Failed: ")
+        print(out.decode("utf8"))
+        print(err.decode("utf8"))
+    else:
+        print(out.decode("utf8"))
+        if verbose:
+            print("Output: ")
+            print(err.decode("utf8"))
