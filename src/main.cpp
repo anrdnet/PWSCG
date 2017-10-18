@@ -93,7 +93,7 @@ bool parse_complex(std::string arg, std::string value, std::string prefix,
 
 void print_usage()
 {
-    std::cerr<<"pwcg {-p} {-n <subdiv>} {-s {<n>}+}+ -{k{,1,2,3},f,u}{r,i} <expr>"<<std::endl;
+    std::cerr<<"pwcg {-p} {-z} {-n <subdiv>} {-s {<n>}+}+ -{k{,1,2,3},f,u}{r,i} <expr>"<<std::endl;
 }
 
 int main(int argc, char *argv[])
